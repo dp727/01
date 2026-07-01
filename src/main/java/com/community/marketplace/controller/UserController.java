@@ -5,6 +5,7 @@ import com.community.marketplace.dto.CommentResponse;
 import com.community.marketplace.dto.ItemSummaryResponse;
 import com.community.marketplace.dto.PageResponse;
 import com.community.marketplace.dto.UserCreateRequest;
+import com.community.marketplace.dto.UserLocationRequest;
 import com.community.marketplace.dto.UserResponse;
 import com.community.marketplace.dto.UserUpdateRequest;
 import com.community.marketplace.service.CommentService;
@@ -38,6 +39,19 @@ public class UserController {
     @PutMapping("/{id}")
     public ApiResponse<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserUpdateRequest request) {
         return ApiResponse.success(userService.updateUser(id, request));
+    }
+
+    @PostMapping("/{id}/location")
+    public ApiResponse<UserResponse> updateUserLocation(
+            @PathVariable Long id,
+            @Valid @RequestBody UserLocationRequest request) {
+        return ApiResponse.success(userService.updateUserLocation(
+                id, request.getLatitude(), request.getLongitude(), request.getLocation()));
+    }
+
+    @GetMapping("/{id}/location")
+    public ApiResponse<UserResponse> getUserLocation(@PathVariable Long id) {
+        return ApiResponse.success(userService.getUserById(id));
     }
 
     @GetMapping("/{userId}/items")

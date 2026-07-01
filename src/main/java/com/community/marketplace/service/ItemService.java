@@ -1,10 +1,12 @@
 package com.community.marketplace.service;
 
 import com.community.marketplace.common.BusinessException;
+import com.community.marketplace.common.GeoUtils;
 import com.community.marketplace.dto.ItemCreateRequest;
 import com.community.marketplace.dto.ItemDetailResponse;
 import com.community.marketplace.dto.ItemSummaryResponse;
 import com.community.marketplace.dto.ItemUpdateRequest;
+import com.community.marketplace.dto.ItemWithDistance;
 import com.community.marketplace.dto.PageResponse;
 import com.community.marketplace.entity.Category;
 import com.community.marketplace.entity.Item;
@@ -19,6 +21,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +48,8 @@ public class ItemService {
                 .coverImage(request.getCoverImage())
                 .images(request.getImages())
                 .community(request.getCommunity())
+                .latitude(user.getLatitude())
+                .longitude(user.getLongitude())
                 .user(user)
                 .category(category)
                 .status(ItemStatus.ON_SALE)
@@ -71,6 +79,51 @@ public class ItemService {
         }
 
         return toPageResponse(itemPage);
+    }
+
+    public PageResponse<ItemSummaryResponse> listItemsByLocation(
+            String keyword, Long categoryId,
+            BigDecimal userLatitude, BigDecimal userLongitude, Double radiusKm,
+            int page, int size) {
+
+        BigDecimal minLat = GeoUtils.calculateMinLatitude(userLatitude, radiusKm);
+        BigDecimal maxLat = GeoUtils.calculateMaxLatitude(userLatitude, radiusKm);
+        BigDecimal minLon = GeoUtils.calculateMinLongitude(userLatitude, userLongitude, radiusKm);
+        BigDecimal maxLon = GeoUtils.calculateMaxLongitude(userLatitude, userLongitude, radiusKm);
+
+        List<Item> items;
+        if (keyword != null && !keyword.trim().isEmpty() && categoryId != null) {
+            items = itemRepository.findByStatusAndCategoryIdAndKeywordAndLocationRange(
+                    ItemStatus.ON_SALE, categoryId, keyword, minLat, maxLat, minLon, maxLon);
+        } else if (keyword != null && !keyword.trim().isEmpty()) {
+            items = itemRepository.findByStatusAndKeywordAndLocationRange(
+                    ItemStatus.ON_SALE, keyword, minLat, maxLat, minLon, maxLon);
+        } else if (categoryId != null) {
+            items = itemRepository.findByStatusAndCategoryIdAndLocationRange(
+                    ItemStatus.ON_SALE, categoryId, minLat, maxLat, minLon, maxLon);
+        } else {
+            items = itemRepository.findByStatusAndLocationRange(
+                    ItemStatus.ON_SALE, minLat, maxLat, minLon, maxLon);
+        }
+
+        List<ItemWithDistance> itemsWithDistance = items.stream()
+                .map(item -> {
+                    double distance = GeoUtils.calculateDistanceKm(
+                            userLatitude, userLongitude,
+                            item.getLatitude(), item.getLongitude());
+                    return new ItemWithDistance(item, distance);
+                })
+                .filter(iwd -> iwd.getDistanceKm() <= radiusKm)
+                .sorted(Comparator.comparingDouble(ItemWithDistance::getDistanceKm))
+                .collect(Collectors.toList());
+
+        int start = page * size;
+        int end = Math.min(start + size, itemsWithDistance.size());
+        List<ItemWithDistance> pageContent = start < itemsWithDistance.size()
+                ? itemsWithDistance.subList(start, end)
+                : new ArrayList<>();
+
+        return toPageResponseWithDistance(pageContent, page, size, itemsWithDistance.size());
     }
 
     public PageResponse<ItemSummaryResponse> listUserItems(Long userId, String status, int page, int size) {
@@ -200,6 +253,19 @@ public class ItemService {
                 .build();
     }
 
+    private ItemSummaryResponse toSummaryResponseWithDistance(Item item, double distanceKm) {
+        return ItemSummaryResponse.builder()
+                .id(item.getId())
+                .title(item.getTitle())
+                .price(item.getPrice())
+                .coverImage(item.getCoverImage())
+                .community(item.getCommunity())
+                .createdAt(item.getCreatedAt())
+                .categoryName(item.getCategory().getName())
+                .distance(GeoUtils.formatDistance(distanceKm))
+                .build();
+    }
+
     private PageResponse<ItemSummaryResponse> toPageResponse(Page<Item> itemPage) {
         return PageResponse.<ItemSummaryResponse>builder()
                 .content(itemPage.getContent().stream().map(this::toSummaryResponse).collect(Collectors.toList()))
@@ -207,6 +273,19 @@ public class ItemService {
                 .size(itemPage.getSize())
                 .totalElements(itemPage.getTotalElements())
                 .totalPages(itemPage.getTotalPages())
+                .build();
+    }
+
+    private PageResponse<ItemSummaryResponse> toPageResponseWithDistance(
+            List<ItemWithDistance> itemsWithDistance, int page, int size, long totalElements) {
+        return PageResponse.<ItemSummaryResponse>builder()
+                .content(itemsWithDistance.stream()
+                        .map(iwd -> toSummaryResponseWithDistance(iwd.getItem(), iwd.getDistanceKm()))
+                        .collect(Collectors.toList()))
+                .page(page)
+                .size(size)
+                .totalElements(totalElements)
+                .totalPages((int) Math.ceil((double) totalElements / size))
                 .build();
     }
 }

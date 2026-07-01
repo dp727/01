@@ -4,6 +4,8 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class UserCreateRequest {
 
@@ -18,4 +20,8 @@ public class UserCreateRequest {
 
     @Size(max = 20, message = "楼栋号长度不能超过20")
     private String buildingNumber;
+
+    private BigDecimal latitude;
+
+    private BigDecimal longitude;
 }

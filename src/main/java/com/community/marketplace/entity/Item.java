@@ -57,6 +57,12 @@ public class Item {
     @Column(length = 100)
     private String community;
 
+    @Column(precision = 10, scale = 7)
+    private BigDecimal latitude;
+
+    @Column(precision = 10, scale = 7)
+    private BigDecimal longitude;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ItemStatus status;

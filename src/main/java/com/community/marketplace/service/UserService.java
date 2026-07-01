@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -23,6 +25,8 @@ public class UserService {
                 .avatar(request.getAvatar())
                 .location(request.getLocation())
                 .buildingNumber(request.getBuildingNumber())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
                 .build();
         User saved = userRepository.save(user);
         return toResponse(saved);
@@ -49,6 +53,26 @@ public class UserService {
         if (request.getBuildingNumber() != null) {
             user.setBuildingNumber(request.getBuildingNumber());
         }
+        if (request.getLatitude() != null) {
+            user.setLatitude(request.getLatitude());
+        }
+        if (request.getLongitude() != null) {
+            user.setLongitude(request.getLongitude());
+        }
+
+        User updated = userRepository.save(user);
+        return toResponse(updated);
+    }
+
+    @Transactional
+    public UserResponse updateUserLocation(Long id, BigDecimal latitude, BigDecimal longitude, String location) {
+        User user = findById(id);
+
+        user.setLatitude(latitude);
+        user.setLongitude(longitude);
+        if (location != null) {
+            user.setLocation(location);
+        }
 
         User updated = userRepository.save(user);
         return toResponse(updated);
@@ -66,6 +90,8 @@ public class UserService {
                 .avatar(user.getAvatar())
                 .location(user.getLocation())
                 .buildingNumber(user.getBuildingNumber())
+                .latitude(user.getLatitude())
+                .longitude(user.getLongitude())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

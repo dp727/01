@@ -11,6 +11,8 @@ import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/api/items")
 @RequiredArgsConstructor
@@ -34,8 +36,15 @@ public class ItemController {
     public ApiResponse<PageResponse<ItemSummaryResponse>> listItems(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) BigDecimal latitude,
+            @RequestParam(required = false) BigDecimal longitude,
+            @RequestParam(required = false) Double radius,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
+        if (latitude != null && longitude != null && radius != null) {
+            return ApiResponse.success(itemService.listItemsByLocation(
+                    keyword, categoryId, latitude, longitude, radius, page, size));
+        }
         return ApiResponse.success(itemService.listItems(keyword, categoryId, page, size));
     }
 

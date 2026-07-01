@@ -3,6 +3,8 @@ package com.community.marketplace.dto;
 import javax.validation.constraints.Size;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class UserUpdateRequest {
 
@@ -16,4 +18,8 @@ public class UserUpdateRequest {
 
     @Size(max = 20, message = "楼栋号长度不能超过20")
     private String buildingNumber;
+
+    private BigDecimal latitude;
+
+    private BigDecimal longitude;
 }

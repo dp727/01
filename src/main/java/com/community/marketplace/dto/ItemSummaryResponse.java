@@ -17,4 +17,5 @@ public class ItemSummaryResponse {
     private String community;
     private LocalDateTime createdAt;
     private String categoryName;
+    private String distance;
 }
