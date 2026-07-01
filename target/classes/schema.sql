@@ -56,6 +56,8 @@ CREATE TABLE IF NOT EXISTS items (
     INDEX idx_category_id (category_id),
     INDEX idx_status_created (status, created_at DESC),
     INDEX idx_location (latitude, longitude),
+    INDEX idx_status_location (status, latitude, longitude),
+    INDEX idx_status_category_location (status, category_id, latitude, longitude),
     FOREIGN KEY (user_id)      REFERENCES users(id)      ON DELETE CASCADE,
     FOREIGN KEY (category_id)  REFERENCES categories(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

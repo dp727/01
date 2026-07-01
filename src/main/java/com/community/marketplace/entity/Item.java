@@ -13,6 +13,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -80,6 +81,9 @@ public class Item {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Transient
+    private Double distance;
 
     @PrePersist
     protected void onCreate() {

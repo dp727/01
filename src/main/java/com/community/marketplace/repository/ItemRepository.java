@@ -76,4 +76,136 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             @Param("maxLat") BigDecimal maxLat,
             @Param("minLon") BigDecimal minLon,
             @Param("maxLon") BigDecimal maxLon);
+
+    @Query(value = "SELECT i.*, " +
+           "(6371 * acos(cos(radians(:userLat)) * cos(radians(i.latitude)) * " +
+           "cos(radians(i.longitude) - radians(:userLon)) + " +
+           "sin(radians(:userLat)) * sin(radians(i.latitude)))) AS distance " +
+           "FROM items i " +
+           "WHERE i.status = :status " +
+           "AND i.latitude BETWEEN :minLat AND :maxLat " +
+           "AND i.longitude BETWEEN :minLon AND :maxLon " +
+           "HAVING distance <= :radiusKm " +
+           "ORDER BY distance ASC",
+           countQuery = "SELECT COUNT(*) " +
+           "FROM items i " +
+           "WHERE i.status = :status " +
+           "AND i.latitude BETWEEN :minLat AND :maxLat " +
+           "AND i.longitude BETWEEN :minLon AND :maxLon " +
+           "AND (6371 * acos(cos(radians(:userLat)) * cos(radians(i.latitude)) * " +
+           "cos(radians(i.longitude) - radians(:userLon)) + " +
+           "sin(radians(:userLat)) * sin(radians(i.latitude)))) <= :radiusKm",
+           nativeQuery = true)
+    Page<Item> findByStatusAndLocationRangeWithDistance(
+            @Param("status") String status,
+            @Param("userLat") BigDecimal userLat,
+            @Param("userLon") BigDecimal userLon,
+            @Param("minLat") BigDecimal minLat,
+            @Param("maxLat") BigDecimal maxLat,
+            @Param("minLon") BigDecimal minLon,
+            @Param("maxLon") BigDecimal maxLon,
+            @Param("radiusKm") Double radiusKm,
+            Pageable pageable);
+
+    @Query(value = "SELECT i.*, " +
+           "(6371 * acos(cos(radians(:userLat)) * cos(radians(i.latitude)) * " +
+           "cos(radians(i.longitude) - radians(:userLon)) + " +
+           "sin(radians(:userLat)) * sin(radians(i.latitude)))) AS distance " +
+           "FROM items i " +
+           "WHERE i.status = :status " +
+           "AND i.category_id = :categoryId " +
+           "AND i.latitude BETWEEN :minLat AND :maxLat " +
+           "AND i.longitude BETWEEN :minLon AND :maxLon " +
+           "HAVING distance <= :radiusKm " +
+           "ORDER BY distance ASC",
+           countQuery = "SELECT COUNT(*) " +
+           "FROM items i " +
+           "WHERE i.status = :status " +
+           "AND i.category_id = :categoryId " +
+           "AND i.latitude BETWEEN :minLat AND :maxLat " +
+           "AND i.longitude BETWEEN :minLon AND :maxLon " +
+           "AND (6371 * acos(cos(radians(:userLat)) * cos(radians(i.latitude)) * " +
+           "cos(radians(i.longitude) - radians(:userLon)) + " +
+           "sin(radians(:userLat)) * sin(radians(i.latitude)))) <= :radiusKm",
+           nativeQuery = true)
+    Page<Item> findByStatusAndCategoryIdAndLocationRangeWithDistance(
+            @Param("status") String status,
+            @Param("categoryId") Long categoryId,
+            @Param("userLat") BigDecimal userLat,
+            @Param("userLon") BigDecimal userLon,
+            @Param("minLat") BigDecimal minLat,
+            @Param("maxLat") BigDecimal maxLat,
+            @Param("minLon") BigDecimal minLon,
+            @Param("maxLon") BigDecimal maxLon,
+            @Param("radiusKm") Double radiusKm,
+            Pageable pageable);
+
+    @Query(value = "SELECT i.*, " +
+           "(6371 * acos(cos(radians(:userLat)) * cos(radians(i.latitude)) * " +
+           "cos(radians(i.longitude) - radians(:userLon)) + " +
+           "sin(radians(:userLat)) * sin(radians(i.latitude)))) AS distance " +
+           "FROM items i " +
+           "WHERE i.status = :status " +
+           "AND i.title LIKE CONCAT('%', :keyword, '%') " +
+           "AND i.latitude BETWEEN :minLat AND :maxLat " +
+           "AND i.longitude BETWEEN :minLon AND :maxLon " +
+           "HAVING distance <= :radiusKm " +
+           "ORDER BY distance ASC",
+           countQuery = "SELECT COUNT(*) " +
+           "FROM items i " +
+           "WHERE i.status = :status " +
+           "AND i.title LIKE CONCAT('%', :keyword, '%') " +
+           "AND i.latitude BETWEEN :minLat AND :maxLat " +
+           "AND i.longitude BETWEEN :minLon AND :maxLon " +
+           "AND (6371 * acos(cos(radians(:userLat)) * cos(radians(i.latitude)) * " +
+           "cos(radians(i.longitude) - radians(:userLon)) + " +
+           "sin(radians(:userLat)) * sin(radians(i.latitude)))) <= :radiusKm",
+           nativeQuery = true)
+    Page<Item> findByStatusAndKeywordAndLocationRangeWithDistance(
+            @Param("status") String status,
+            @Param("keyword") String keyword,
+            @Param("userLat") BigDecimal userLat,
+            @Param("userLon") BigDecimal userLon,
+            @Param("minLat") BigDecimal minLat,
+            @Param("maxLat") BigDecimal maxLat,
+            @Param("minLon") BigDecimal minLon,
+            @Param("maxLon") BigDecimal maxLon,
+            @Param("radiusKm") Double radiusKm,
+            Pageable pageable);
+
+    @Query(value = "SELECT i.*, " +
+           "(6371 * acos(cos(radians(:userLat)) * cos(radians(i.latitude)) * " +
+           "cos(radians(i.longitude) - radians(:userLon)) + " +
+           "sin(radians(:userLat)) * sin(radians(i.latitude)))) AS distance " +
+           "FROM items i " +
+           "WHERE i.status = :status " +
+           "AND i.category_id = :categoryId " +
+           "AND i.title LIKE CONCAT('%', :keyword, '%') " +
+           "AND i.latitude BETWEEN :minLat AND :maxLat " +
+           "AND i.longitude BETWEEN :minLon AND :maxLon " +
+           "HAVING distance <= :radiusKm " +
+           "ORDER BY distance ASC",
+           countQuery = "SELECT COUNT(*) " +
+           "FROM items i " +
+           "WHERE i.status = :status " +
+           "AND i.category_id = :categoryId " +
+           "AND i.title LIKE CONCAT('%', :keyword, '%') " +
+           "AND i.latitude BETWEEN :minLat AND :maxLat " +
+           "AND i.longitude BETWEEN :minLon AND :maxLon " +
+           "AND (6371 * acos(cos(radians(:userLat)) * cos(radians(i.latitude)) * " +
+           "cos(radians(i.longitude) - radians(:userLon)) + " +
+           "sin(radians(:userLat)) * sin(radians(i.latitude)))) <= :radiusKm",
+           nativeQuery = true)
+    Page<Item> findByStatusAndCategoryIdAndKeywordAndLocationRangeWithDistance(
+            @Param("status") String status,
+            @Param("categoryId") Long categoryId,
+            @Param("keyword") String keyword,
+            @Param("userLat") BigDecimal userLat,
+            @Param("userLon") BigDecimal userLon,
+            @Param("minLat") BigDecimal minLat,
+            @Param("maxLat") BigDecimal maxLat,
+            @Param("minLon") BigDecimal minLon,
+            @Param("maxLon") BigDecimal maxLon,
+            @Param("radiusKm") Double radiusKm,
+            Pageable pageable);
 }

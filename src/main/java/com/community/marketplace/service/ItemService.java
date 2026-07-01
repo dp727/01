@@ -22,8 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -91,39 +89,38 @@ public class ItemService {
         BigDecimal minLon = GeoUtils.calculateMinLongitude(userLatitude, userLongitude, radiusKm);
         BigDecimal maxLon = GeoUtils.calculateMaxLongitude(userLatitude, userLongitude, radiusKm);
 
-        List<Item> items;
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<Item> itemPage;
+        String status = ItemStatus.ON_SALE.name();
+
         if (keyword != null && !keyword.trim().isEmpty() && categoryId != null) {
-            items = itemRepository.findByStatusAndCategoryIdAndKeywordAndLocationRange(
-                    ItemStatus.ON_SALE, categoryId, keyword, minLat, maxLat, minLon, maxLon);
+            itemPage = itemRepository.findByStatusAndCategoryIdAndKeywordAndLocationRangeWithDistance(
+                    status, categoryId, keyword, userLatitude, userLongitude,
+                    minLat, maxLat, minLon, maxLon, radiusKm, pageRequest);
         } else if (keyword != null && !keyword.trim().isEmpty()) {
-            items = itemRepository.findByStatusAndKeywordAndLocationRange(
-                    ItemStatus.ON_SALE, keyword, minLat, maxLat, minLon, maxLon);
+            itemPage = itemRepository.findByStatusAndKeywordAndLocationRangeWithDistance(
+                    status, keyword, userLatitude, userLongitude,
+                    minLat, maxLat, minLon, maxLon, radiusKm, pageRequest);
         } else if (categoryId != null) {
-            items = itemRepository.findByStatusAndCategoryIdAndLocationRange(
-                    ItemStatus.ON_SALE, categoryId, minLat, maxLat, minLon, maxLon);
+            itemPage = itemRepository.findByStatusAndCategoryIdAndLocationRangeWithDistance(
+                    status, categoryId, userLatitude, userLongitude,
+                    minLat, maxLat, minLon, maxLon, radiusKm, pageRequest);
         } else {
-            items = itemRepository.findByStatusAndLocationRange(
-                    ItemStatus.ON_SALE, minLat, maxLat, minLon, maxLon);
+            itemPage = itemRepository.findByStatusAndLocationRangeWithDistance(
+                    status, userLatitude, userLongitude,
+                    minLat, maxLat, minLon, maxLon, radiusKm, pageRequest);
         }
 
-        List<ItemWithDistance> itemsWithDistance = items.stream()
+        List<ItemWithDistance> pageContent = itemPage.getContent().stream()
                 .map(item -> {
                     double distance = GeoUtils.calculateDistanceKm(
                             userLatitude, userLongitude,
                             item.getLatitude(), item.getLongitude());
                     return new ItemWithDistance(item, distance);
                 })
-                .filter(iwd -> iwd.getDistanceKm() <= radiusKm)
-                .sorted(Comparator.comparingDouble(ItemWithDistance::getDistanceKm))
                 .collect(Collectors.toList());
 
-        int start = page * size;
-        int end = Math.min(start + size, itemsWithDistance.size());
-        List<ItemWithDistance> pageContent = start < itemsWithDistance.size()
-                ? itemsWithDistance.subList(start, end)
-                : new ArrayList<>();
-
-        return toPageResponseWithDistance(pageContent, page, size, itemsWithDistance.size());
+        return toPageResponseWithDistance(pageContent, page, size, itemPage.getTotalElements());
     }
 
     public PageResponse<ItemSummaryResponse> listUserItems(Long userId, String status, int page, int size) {
